@@ -637,3 +637,330 @@ git branch testing
 Isso cria um novo ponteiro para o mesmo commit em que você está atualmente.
 
 ![Alt text](https://git-scm.com/book/en/v2/images/two-branches.png "two-branches")
+
+Como o Git sabe em qual branch você está atualmente? Ele mantém um ponteiro especial chamado HEAD. Note que isso é muito diferente do conceito de HEAD em outros sistemas de versionamento com os quais você pode estar acostumado, como Subversion ou CVS. No Git, isso é um ponteiro para o branch local em que você está. Neste caso, você ainda está em master. O comando git branch apenas criou um novo branch - ele não mudou para aquele branch.
+
+![Alt text](https://git-scm.com/book/en/v2/images/head-to-master.png "head-to-master")
+
+Você pode ver isso facilmente executando um simples comando git log que mostra para onde os ponteiros do branch estão apontando. Esta opção é chamada de `--decorate`.
+
+```cmd
+$ git log --oneline --decorate
+f30ab (HEAD -> master, testing) add feature #32 - ability to add new formats to the central interface
+34ac2 Fixed bug #1328 - stack overflow under certain conditions
+98ca9 The initial commit of my project
+```
+
+### Alternando entre Branches
+
+Para mudar para um branch existente, você executa o comando git checkout. Vamos mudar para o novo branch testing:
+
+```cmd
+git checkout testing
+```
+
+Isso move o HEAD e o aponta para o branch` testing`.
+
+![Alt text](https://git-scm.com/book/en/v2/images/head-to-testing.png "head-to-testing")
+
+O que isso significa? Bem, vamos fazer outro commit:
+
+```cmd
+$ vim test.rb
+$ git commit -a -m 'made a change'
+```
+
+![Alt text](https://git-scm.com/book/en/v2/images/advance-testing.png "advance-testing")
+
+
+Isso é interessante, porque agora seu branch testing avançou, mas seu branch` master` ainda aponta para o commit em que você estava quando executou `git checkout` para alternar entre os branches. Vamos voltar para o branch master:
+
+```cmd
+git checkout master
+```
+
+![Alt text](https://git-scm.com/book/en/v2/images/checkout-master.png "checkout-master")
+
+Esse comando fez duas coisas. Ele moveu o ponteiro HEAD de volta para apontar para o branch master, e reverteu os arquivos em seu diretório de trabalho de volta para o snapshots para o qual` master` aponta. Isso também significa que as alterações feitas a partir deste ponto irão divergir de uma versão mais antiga do projeto. Essencialmente, ele retrocede o trabalho que você fez em seu branch testing para que você possa ir em uma direção diferente.
+
+Vamos fazer algumas mudanças e confirmar novamente
+
+```cmd
+$ vim test.rb
+$ git commit -a -m 'made other changes'
+```
+
+Agora o histórico do seu projeto divergiu (consulte Histórico de diferenças). Você criou e mudou para um branch, fez algum trabalho nele e, em seguida, voltou para o seu branch principal e fez outro trabalho. Ambas as mudanças são isoladas em branches separados: você pode alternar entre os branches e mesclá-los quando estiver pronto. E você fez tudo isso com comandos simples `branch`,` checkout` e `commit`.
+
+![Alt text](https://git-scm.com/book/en/v2/images/advance-master.png "advance-master")
+
+Você também pode ver isso facilmente com o comando `git log`. Se você executar `git log --oneline --decorate --graph --all`, ele mostrará o histórico de seus commits, exibindo onde estão seus ponteiros de branch e como seu histórico divergiu.
+
+```cmd
+$ git log --oneline --decorate --graph --all
+* c2b9e (HEAD, master) made other changes
+| * 87ab2 (testing) made a change
+|/
+* f30ab add feature #32 - ability to add new formats to the
+* 34ac2 fixed bug #1328 - stack overflow under certain conditions
+* 98ca9 initial commit of my project
+```
+
+Como um branch no Git é na verdade um arquivo simples que contém a verificação SHA-1 de 40 caracteres do commit para o qual ele aponta, branches são fáceis para criar e destruir. Criar um novo branch é tão rápido e simples quanto escrever 41 bytes em um arquivo (40 caracteres e uma nova linha).
+
+##O básico de Ramificação (Branch) e Mesclagem (Merge)
+
+### Ramificação Básica
+
+Primeiramente, digamos que você esteja trabalhando em seu projeto e já tenha alguns commits no branch master.
+
+![Alt text](https://git-scm.com/book/en/v2/images/basic-branching-1.png "basic-branching-1")
+
+Você decidiu que você vai trabalhar no chamado #53 em qualquer que seja o sistema de gerenciamento de chamados que a sua empresa usa.
+
+Para criar um novo branch e mudar para ele ao mesmo tempo, você pode executar o comando `git checkout` com o parâmetro `-b`:
+
+```cmd
+$ git checkout -b iss53
+Switched to a new branch "iss53"
+```
+
+Esta é a abreviação de:
+
+```cmd
+$ git branch iss53
+$ git checkout iss53
+```
+
+![Alt text](https://git-scm.com/book/en/v2/images/basic-branching-2.png "basic-branching-2")
+
+Você trabalha no seu website e adiciona alguns commits.
+
+Ao fazer isso, você move o branch iss53 para a frente, pois este é o branch que está selecionado, ou checked out(isto é, seu HEAD está apontando para ele):
+
+```cmd
+$ vim index.html
+$ git commit -a -m 'Create new footer [issue 53]'
+```
+
+![Alt text](https://git-scm.com/book/en/v2/images/basic-branching-3.png "basic-branching-3")
+
+Agora você recebe a ligação dizendo que há um problema com o site, e que você precisa corrigí-lo imediatamente. Com o Git, você não precisa enviar sua correção junto com as alterações do branch `iss53` que já fez. Você também não precisa se esforçar muito para desfazer essas alterações antes de poder trabalhar na correção do erro em produção. Tudo o que você precisa fazer é voltar para o seu branch master.
+
+Entretanto, antes de fazer isso, note que se seu diretório de trabalho ou stage possui alterações ainda não commitadas que conflitam com o branch que você quer usar, o Git não deixará que você troque de branch. O melhor é que seu estado de trabalho atual esteja limpo antes de trocar de branches.
+
+```cmd
+$ git checkout master
+Switched to branch 'master'
+```
+
+Neste ponto, o diretório de trabalho de seu projeto está exatamente da forma como estava antes de você começar a trabalhar no chamado #53, e você pode se concentrar na correção. 
+
+Seu próximo passo é fazer a correção necessária; Vamos criar um branch chamado `hotfix` no qual trabalharemos até a correção estar pronta:
+
+```cmd
+$ git checkout -b hotfix
+Switched to a new branch 'hotfix'
+$ vim index.html
+$ git commit -a -m 'Fix broken email address'
+[hotfix 1fb7853] Fix broken email address
+ 1 file changed, 2 insertions(+)
+```
+
+![Alt text](https://git-scm.com/book/en/v2/images/basic-branching-4.png "basic-branching-4")
+
+Você pode executar seus testes, se assegurar que a correção está do jeito que você quer, e finalmente mesclar o branch `hotfix` de volta para o branch `master` para poder enviar para produção. Para isso, você usa o comando `git merge` command:
+
+```cmd
+$ git checkout master
+$ git merge hotfix
+Updating f42c576..3a0874c
+Fast-forward
+ index.html | 2 ++
+ 1 file changed, 2 insertions(+)
+```
+
+Você vai notar a expressão “fast-forward” nesse merge. Já que o branch `hotfix` que você mesclou aponta para o commit `C4` que está diretamente à frente do commit `C2` no qual você está agora, o Git simplesmente move o ponteiro para a frente. Em outras palavras, quando você tenta mesclar um commit com outro commit que pode ser alcançado por meio do histórico do primeiro commit, o Git simplifica as coisas e apenas move o ponteiro para a frente porque não há nenhum alteração divergente para mesclar — isso é conhecido como um merge “fast-forward.”
+
+Agora, a sua alteração está no snapshot do commmit para o qual o branch `master` aponta, e você você enviar a correção.
+
+![Alt text](https://git-scm.com/book/en/v2/images/basic-branching-5.png "basic-branching-5")
+
+
+Assim que a sua correção importantíssima é entregue, você já pode voltar para o trabalho que estava fazendo antes da interrupção. Porém, você irá antes excluir o branch `hotfix`, pois ele já não é mais necessário — o branch `master` aponta para o mesmo lugar. Você pode remover o branch usando a opção `-d` com o comando `git branch`:
+
+```cmd
+$ git branch -d hotfix
+Deleted branch hotfix (3a0874c).
+```
+
+Agora você pode retornar ao branch com seu trabalho em progresso na issue #53 e continuar trabalhando.
+
+```cmd
+$ git checkout iss53
+Switched to branch "iss53"
+$ vim index.html
+$ git commit -a -m 'Finish the new footer [issue 53]'
+[iss53 ad82d7a] Finish the new footer [issue 53]
+1 file changed, 1 insertion(+)
+```
+
+![Alt text](https://git-scm.com/book/en/v2/images/basic-branching-6.png "basic-branching-6")
+
+
+É importante frisar que o trabalho que você fez no seu branch `hotfix` não está contido nos arquivos do seu branch `iss53`. Caso você precise dessas alterações, você pode fazer o merge do branch `master` no branch `iss53` executando `git merge master`, ou você pode esperar para integrar essas alterações até que você decida mesclar o branch `iss53` de volta para master mais tarde.
+
+### Mesclagem Básica
+
+Digamos que você decidiu que o seu trabalho no chamado `#53` está completo e pronto para ser mesclado de volta para o branch `master`. Para fazer isso, você precisa fazer o merge do branch `iss53`, da mesma forma com que você mesclou o branch `hotfix` anteriormente. Tudo o que você precisa fazer é mudar para o branch que receberá as alterações e executar o comando `git merge`:
+
+```cmd
+$ git checkout master
+Switched to branch 'master'
+$ git merge iss53
+Merge made by the 'recursive' strategy.
+index.html |    1 +
+1 file changed, 1 insertion(+)
+```
+
+Isso é um pouco diferente do merge anterior que você fez com o branch `hotfix`. Neste caso, o histórico de desenvolvimento divergiu de um ponto mais antigo. O Git precisa trabalhar um pouco mais, devido ao fato de que o commit no seu branch atual não é um ancestral direto do branch cujas alterações você quer integrar. Neste caso, o Git faz uma simples mesclagem de três vias (three-way merge), usando os dois snapshots referenciados pela ponta de cada branch e o ancestral em comum dos dois.
+
+![Alt text](https://git-scm.com/book/en/v2/images/basic-merging-1.png "basic-merging-1")
+
+Ao invés de apenas mover o ponteiro do branch para a frente, o Git cria um novo snapshot que resulta desse merge em três vias e automaticamente cria um novo commit que aponta para este snapshot. Esse tipo de commit é chamado de commit de merge, e é especial porque tem mais de um pai.
+
+![Alt text](https://git-scm.com/book/en/v2/images/basic-merging-2.png "basic-merging-2")
+
+Agora que seu trabalho foi integrado, você não precisa mais do brnach `iss53`. Você pode encerrar o chamado no seu sistema e excluir o branch:
+
+```cmd
+git branch -d iss53
+```
+### Conflitos Básicos de Merge
+
+De vez em quando, esse processo não acontece de maneira tão tranquila. Se você mudou a mesma parte do mesmo arquivo de maneiras diferentes nos dois branches que você está tentando mesclar, o Git não vai conseguir integrá-los de maneira limpa. Se a sua correção para o problema #53 modificou a mesma parte de um arquivo que também foi modificado em `hotfix`, você vai ter um conflito de merge que se parece com isso:
+
+```cmd
+$ git merge iss53
+Auto-merging index.html
+CONFLICT (content): Merge conflict in index.html
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+O Git não criou automaticamente um novo commit de merge. Ele pausou o processo enquanto você soluciona o conflito. Para ver quais arquivos não foram mesclados a qualquer momento durante um conflito de merge, você pode executar `git status`:
+
+```cmd
+$ git status
+On branch master
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+
+    both modified:      index.html
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+Qualquer arquivo que tenha conflitos que não foram solucionados é listado como unmerged("não mesclado"). O Git adiciona símbolos padrão de resolução de conflitos nos arquivos que têm conflitos, para que você possa abrí-los manualmente e solucionar os conflitos. 
+
+Se você quiser usar uma ferramenta gráfica para resolver os conflitos, você pode executar `git mergetool`, que inicia uma ferramente de mesclagem visual apropriada e guia você atravès dos conflitos:
+
+```cmd
+$ git mergetool
+
+This message is displayed because 'merge.tool' is not configured.
+See 'git mergetool --tool-help' or 'git help config' for more details.
+'git mergetool' will now attempt to use one of the following tools:
+opendiff kdiff3 tkdiff xxdiff meld tortoisemerge gvimdiff diffuse diffmerge ecmerge p4merge araxis bc3 codecompare vimdiff emerge
+Merging:
+index.html
+
+Normal merge conflict for 'index.html':
+  {local}: modified file
+  {remote}: modified file
+Hit return to start merge resolution tool (opendiff):
+```
+
+Após você sair da ferramenta, o Git pergunta se a operação foi bem sucedida. Se você responder que sim, o Git adiciona o arquivo ao stage para marcá-lo como resolvido. Você pode executar `git status` novamente para verificar que todos os conflitos foram resolvidos:
+
+```cmd
+$ git status
+On branch master
+All conflicts fixed but you are still merging.
+  (use "git commit" to conclude merge)
+
+Changes to be committed:
+
+    modified:   index.html
+```
+
+Se você estiver satisfeito e verificar que tudo o que havia conflitos foi testado, você pode digitar `git commit` para finalizar o commit. A mensagem de confirmação por padrão é semelhante a esta:
+
+```cmd
+Merge branch 'iss53'
+
+Conflicts:
+    index.html
+#
+# It looks like you may be committing a merge.
+# If this is not correct, please remove the file
+#	.git/MERGE_HEAD
+# and try again.
+
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# On branch master
+# All conflicts fixed but you are still merging.
+#
+# Changes to be committed:
+#	modified:   index.html
+#
+```
+
+### Gestão de Branches
+
+O comando `git branch` faz mais do que apenas criar e excluir branches. Se você executá-lo sem argumentos, obterá uma lista simples de seus branches atuais:
+
+```cmd
+$ git branch
+  iss53
+* master
+  testing
+```
+
+Observe o caractere `*` que no início do master: ele indica o branch que você fez check-out (ou seja, o branch para o qual HEAD aponta). Isso significa que se você fizer commit neste ponto, o branch master será movido para frente com seu novo trabalho. Para ver o último commit em cada branch, você pode executar `git branch -v`:
+
+```cmd
+$ git branch -v
+  iss53   93b412c Fix javascript issue
+* master  7a98805 Merge branch 'iss53'
+  testing 782fd34 Add scott to the author list in the readme
+```
+As opções `--merged` e `--no-merged` podem filtrar esta lista para branches que você tem ou ainda não mesclou no branch em que está atualmente. Para ver quais branches já estão mesclados no branch em que você está, você pode executar `git branch --merged`:
+
+```cmd
+$ git branch --merged
+  iss53
+* master
+```
+
+Como você já mesclou o `iss53` anteriormente, você o vê na sua lista. Branches que aparecem na lista sem o `*` na frente deles geralmente podem ser deletados com `git branch -d`; você já incorporou o trabalho deles em outro branch, então não vai perder nada.
+
+Para ver todos os branches que contêm trabalhos que você ainda não mesclou, você pode executar `git branch --no-merged`:
+
+```cmd
+$ git branch --no-merged
+  testing
+```
+Isso mostra seu outro branch. Por conter trabalho que ainda não foi mesclado, tentar excluí-lo com git branch -d irá não irá executar:
+
+```cmd
+$ git branch -d testing
+error: The branch 'testing' is not fully merged.
+If you are sure you want to delete it, run 'git branch -D testing'.
+```
+
+Se você realmente deseja excluir o branch e perder esse trabalho, pode forçá-lo com `-D`, como mostra a mensagem.
