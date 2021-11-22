@@ -199,13 +199,13 @@ As regras para os padrões que podem ser usados no arquivo .gitignore são as se
 
 - Linhas em branco ou começando com # são ignoradas.
 
--Os padrões que normalmente são usados para nomes de arquivos funcionam.
+- Os padrões que normalmente são usados para nomes de arquivos funcionam.
 
--Você pode iniciar padrões com uma barra (/) para evitar recursividade.
+- Você pode iniciar padrões com uma barra (/) para evitar recursividade.
 
--Você pode terminar padrões com uma barra (/) para especificar um diretório.
+- Você pode terminar padrões com uma barra (/) para especificar um diretório.
 
--Você pode negar um padrão ao fazê-lo iniciar com um ponto de exclamação (!).
+- Você pode negar um padrão ao fazê-lo iniciar com um ponto de exclamação (!).
 
 Padrões de nome de arquivo são como expressões regulares simplificadas usadas em ambiente shell. Um asterisco (`*`) casa com zero ou mais caracteres; `[abc]` casa com qualquer caracter dentro dos colchetes (neste caso, a, b ou c); um ponto de interrogação (`?`) casa com um único caracter qualquer; e caracteres entre colchetes separados por hífen (`[0-9]`) casam com qualquer caracter entre eles (neste caso, de 0 a 9). Você também pode usar dois asteriscos para criar uma expressão que case com diretórios aninhados; `a/**/z casaria com a/z, a/b/z, a/b/c/z`, e assim por diante.
 
