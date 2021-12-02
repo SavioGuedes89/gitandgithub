@@ -708,7 +708,7 @@ $ git log --oneline --decorate --graph --all
 
 Como um branch no Git é na verdade um arquivo simples que contém a verificação SHA-1 de 40 caracteres do commit para o qual ele aponta, branches são fáceis para criar e destruir. Criar um novo branch é tão rápido e simples quanto escrever 41 bytes em um arquivo (40 caracteres e uma nova linha).
 
-##O básico de Ramificação (Branch) e Mesclagem (Merge)
+## O básico de Ramificação (Branch) e Mesclagem (Merge)
 
 ### Ramificação Básica
 
